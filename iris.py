@@ -6,7 +6,8 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
 import seaborn as sns
 import mlflow
-import matplotlib as plt
+import matplotlib.pyplot as plt
+import joblib
 
 import dagshub
 dagshub.init(repo_owner='ravishyadav112', repo_name='mlflow', mlflow=True)
@@ -15,7 +16,7 @@ import mlflow
 with mlflow.start_run():
   mlflow.log_param('parameter name', 'value')
   mlflow.log_metric('metric name', 1)
-mlflow.set_tracking_uri(" https://github.com/ravishyadav112/mlflow.git")
+# mlflow.set_tracking_uri("https://dagshub.com/ravishyadav112/mlflow.mlflow")
 
 data = load_iris()
 
@@ -43,7 +44,7 @@ with mlflow.start_run():
 
     plt.figure(figsize=(8,8))
     cm  = confusion_matrix(y_pred , y_test)
-    sns.heatmap(cm , annot=True , fmt='d' , cmap='coolwarm' , xticklabels=data.target_names , yticklabels=data.target_names )
+    sns.heatmap(cm , annot=True , fmt='d' , cmap='coolwarm' , xticklabels=data.target_names , yticklabels=data.target_names ) , 
     plt.xlabel('Predicted')
     plt.ylabel("Actual")
     plt.title("Confusion Matrix")
@@ -52,7 +53,9 @@ with mlflow.start_run():
     acc = accuracy_score(y_pred , y_test)
     
     mlflow.log_metrics({'Accuracy' : acc})
-    mlflow.sklearn.log_model(classifier , artifact_path="Classifier")
+
+    joblib.dump(classifier , "Decision_tree.pkl")
+    mlflow.log_artifact("Decision_tree.pkl")
     
     
 
