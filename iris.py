@@ -4,14 +4,25 @@ from sklearn.metrics import accuracy_score,confusion_matrix,classification_repor
 from sklearn.datasets import load_iris
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
+import seaborn as sns
 import mlflow
-mlflow.set_tracking_uri("http://127.0.0.1:5000")
+import matplotlib as plt
+
+import dagshub
+dagshub.init(repo_owner='ravishyadav112', repo_name='mlflow', mlflow=True)
+
+import mlflow
+with mlflow.start_run():
+  mlflow.log_param('parameter name', 'value')
+  mlflow.log_metric('metric name', 1)
+mlflow.set_tracking_uri(" https://github.com/ravishyadav112/mlflow.git")
 
 data = load_iris()
 
 df = pd.DataFrame(data.data , columns=data.feature_names)
 X = df
 y = data.target
+
 X_train , X_test , y_train , y_test = train_test_split(X,y , test_size=0.3 , random_state=2)
 
 
@@ -30,17 +41,22 @@ with mlflow.start_run():
     classifier.fit(X_train , y_train)
     y_pred = classifier.predict(X_test)
 
-
+    plt.figure(figsize=(8,8))
     cm  = confusion_matrix(y_pred , y_test)
+    sns.heatmap(cm , annot=True , fmt='d' , cmap='coolwarm' , xticklabels=data.target_names , yticklabels=data.target_names )
+    plt.xlabel('Predicted')
+    plt.ylabel("Actual")
+    plt.title("Confusion Matrix")
+    plt.savefig("confusionmatrix.png")
+    mlflow.log_artifact("confusionmatrix.png")
     acc = accuracy_score(y_pred , y_test)
-    report = classification_report(y_pred , y_test)
+    
     mlflow.log_metrics({'Accuracy' : acc})
     mlflow.sklearn.log_model(classifier , artifact_path="Classifier")
     
-    with open("classification_report.txt", "w") as f:
-        f.write(report)
+    
 
-    mlflow.log_artifact("classification_report.txt")
+    
 
     mlflow.log_params({"Criterion" : criterion , "Max Depth" : max_depth , "Splitter" : splitter})
     print("confusion_matrix\n" , cm)
